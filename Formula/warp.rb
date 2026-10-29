@@ -1,58 +1,47 @@
-# Homebrew formula for the tap pannous/homebrew-tap (brew install pannous/tap/warp): warp and warp-runtime (the stub
-# standalone executables are made from, next to warp), the prebuilt binaries of the tag's GitHub release (seconds, no
-# Rust build); --HEAD builds main from source. Source of truth; the tap gets a copy.
+# Homebrew formula for the tap pannous/homebrew-tap (brew install pannous/tap/warp): the native warp of the tag's GitHub
+# release, the folder holding it, its compilers, lib/ and libwarp_wasmtime in libexec (seconds, no build). Source of
+# truth; the tap gets a copy.
 # At a release: packaging/homebrew/update_formula.sh <version> writes the version and the binaries' sha256, see notes/packaging.md
 class Warp < Formula
-  desc "Wasm-first programming language and data notation (Rust implementation of Wasp)"
+  desc "Wasm-first programming language and data notation (successor of Wasp, written in warp)"
   homepage "https://github.com/pannous/warp"
-  version "1.4.1"
+  version "1.5.1"
   license all_of: ["AGPL-3.0-or-later", "MIT"]
 
-  RELEASE = "https://github.com/pannous/warp/releases/download/v#{version}/warp-v#{version}".freeze
+  depends_on "binaryen" # wasm-opt, which `warp build` trims a program's module with
 
-  head do
-    url "https://github.com/pannous/warp.git", branch: "main"
-    depends_on "rust" => :build
-  end
+  RELEASE = "https://github.com/pannous/warp/releases/download/v#{version}/warp-v#{version}".freeze
 
   on_macos do
     on_arm do
       url "#{RELEASE}-aarch64-apple-darwin.tar.gz"
-      sha256 "ece900cd9d84beb8dbed4c519a44f83bd679705aa6263b69a6e9a1a0265d9ba0"
+      sha256 "56cdf5c160fb65be407f0cc74c630f2e93533d8215b25183c319b85bb3dec6f5"
     end
     on_intel do
       url "#{RELEASE}-x86_64-apple-darwin.tar.gz"
-      sha256 "cba7fecc8b4a41f7b8945e45c1ac6c820482b988bb0716668cf4ad5065bb4de1"
+      sha256 "f5e66a080430a4b8390fe697d8420c084eb5b3a4b039adfa471f16a8d522b876"
     end
   end
 
   on_linux do
     on_arm do
       url "#{RELEASE}-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "7ee117f887deb93cb35ced09069595c8a27092fbf94bf6eeea74ab9243e48b5b"
+      sha256 "61556b659fcf6a5a198e351a393169274c4be2011397450481c7d4de23001c9a"
     end
     on_intel do
       url "#{RELEASE}-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "0e340390ec00cabad9a92f169194560ebb506125db4c40d0d67cf36c4f29da7f"
+      sha256 "7bfa435879ec03d2de703852ecf9fe9f06cc22f429a6277d3fdbd122d5f96422"
     end
   end
 
   def install
-    if build.head?
-      ENV["CARGO_NET_OFFLINE"] = "false" # the repository's .cargo/config.toml builds offline, from the local cache
-      system "cargo", "install", *std_cargo_args
-      system "cargo", "install", *std_cargo_args(path: "crates/warp-runtime"), "--bin", "warp-runtime"
-      system "cargo", "install", *std_cargo_args(path: "crates/warp-runtime"),
-             "--features", "webview", "--bin", "warp-page-runtime"
-    else
-      bin.install "warp", "warp-runtime"
-      # releases before the page stub (card build-links) ship none
-      bin.install "warp-page-runtime" if File.exist?("warp-page-runtime")
-    end
+    # the tarball is warp's lib/ with the native warp, its compilers and libwarp_wasmtime in it (decision
+    # rust-gone-in-1-5): kept whole, bin/warp a link to its warp, which finds its lib/ and library beside its real path
+    libexec.install Dir["*"]
+    bin.install_symlink libexec/"warp"
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/warp --version") unless build.head?
-    assert_equal "42", shell_output("#{bin}/warp eval '6*7'").strip.split.last
+    assert_equal "42", shell_output("#{bin}/warp '6*7'").strip.split.last
   end
 end
