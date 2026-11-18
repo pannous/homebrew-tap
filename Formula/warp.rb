@@ -1,7 +1,8 @@
-# Homebrew formula for the tap pannous/homebrew-tap (brew install pannous/tap/warp): the native warp of the tag's GitHub
-# release, the folder holding it, its compilers, lib/ and libwarp_wasmtime in libexec (seconds, no build). Source of
-# truth; the tap gets a copy.
-# At a release: packaging/homebrew/update_formula.sh <version> writes the version and the binaries' sha256, see notes/packaging.md
+# Homebrew formula for the tap pannous/homebrew-tap (brew install pannous/tap/warp): the native warp of the tag's
+# GitHub release, the folder holding it, its compilers, lib/ and libwarp_wasmtime in libexec (seconds, no build).
+# Source of truth; the tap gets a copy.
+# At a release: packaging/homebrew/update_formula.sh <version> writes the version and the binaries' sha256,
+# see notes/packaging.md
 class Warp < Formula
   desc "Wasm-first programming language and data notation, written in itself"
   homepage "https://github.com/pannous/warp"
